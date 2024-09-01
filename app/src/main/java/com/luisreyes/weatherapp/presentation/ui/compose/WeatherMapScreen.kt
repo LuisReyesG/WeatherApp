@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -55,23 +56,26 @@ fun WeatherMapScreen(
     ) {
     val weather by viewModel.weatherLiveData.observeAsState()
     val locationData by viewModel.locationData.observeAsState()
-    val defaultLocation  = LatLng(40.9971, 29.1007)
+    val defaultLocation = LatLng(0.0, 0.0)
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(defaultLocation , 15f)
     }
     var map by remember { mutableStateOf<GoogleMap?>(null) }
 
     val context = LocalContext.current
-    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val connectivityManager =
+        context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     val activityNetwork = connectivityManager.activeNetworkInfo
     val isConnected = activityNetwork?.isConnectedOrConnecting == true
 
-    if(isConnected){
-        viewModel.checkLocationPermission(context)
-        if (!viewModel.locationPermissionGranted) {
-            viewModel.requestLocationPermission(context as Activity)
-        } else {
-            viewModel.getDeviceLocation()
+    LaunchedEffect(isConnected) {
+        if (isConnected) {
+            viewModel.checkLocationPermission(context)
+            if (!viewModel.locationPermissionGranted) {
+                viewModel.requestLocationPermission(context as Activity)
+            } else {
+                viewModel.getDeviceLocation()
+            }
         }
     }
 
@@ -84,7 +88,7 @@ fun WeatherMapScreen(
         }
     }
 
-    Scaffold(){ paddingValues ->
+    Scaffold() { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -100,24 +104,23 @@ fun WeatherMapScreen(
                 GoogleMap(
                     modifier = Modifier.fillMaxSize(),
                     cameraPositionState = cameraPositionState,
-                    onMapLoaded = {
-                        map?.let { onMapReady(it) }
-                    },
+                    onMapLoaded = { map?.let { onMapReady(it) } },
                     properties = mapProperties,
-                    uiSettings = mapUiSettings
+                    uiSettings = mapUiSettings,
                 ) {
                     weather?.let { weatherModel ->
                         val location = LatLng(weatherModel.latitude, weatherModel.longitude)
+                        val markerState = rememberMarkerState( position = location)
+                        Log.d("WeatherMapScreen: ", "WeatherModel: $weatherModel" + "\n" + "Location: $location")
                         Marker(
-                            state = rememberMarkerState(position = location),
+                            state = markerState,
                             title = weatherModel.cityName,
                             snippet = "${weatherModel.weatherDescription}, ${weatherModel.temperature}°C"
                         )
 
-                        if (!isConnected) {
-                            LaunchedEffect(location) {
-                                map?.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 12f))
-                            }
+                        LaunchedEffect(location) {
+                            markerState.position = location
+                            map?.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 12f))
                         }
                     }
                 }
@@ -130,13 +133,17 @@ fun WeatherMapScreen(
 
 @Composable
 fun SearchBox(
-    viewModel: WeatherViewModel){
+    viewModel: WeatherViewModel
+) {
     var query by remember { mutableStateOf("") }
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     OutlinedTextField(
         value = query,
-        onValueChange = { query = it
-            Log.d("SearchBox", "Query: $query")},
+        onValueChange = {
+            query = it
+            Log.d("SearchBox", "Query: $query")
+        },
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp),
@@ -150,6 +157,7 @@ fun SearchBox(
                 if (query.isNotEmpty()) {
                     Log.d("SearchBox", "Searching for: $query")
                     viewModel.getCoordinates(query, "AIzaSyDHkpmXPeW02-7uxqCKKCPZt1ai0k_v-a4")
+                    keyboardController?.hide()
                 }
             }
         ),
@@ -165,7 +173,7 @@ fun WeatherInfoTable(weatherModel: WeatherModel?) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row {
                 Text(text = "City Name: ")
-                Text(text = weather.cityName)
+                Text(text = weather.cityName.uppercase())
             }
             Row {
                 Text(text = "Temperature: ")

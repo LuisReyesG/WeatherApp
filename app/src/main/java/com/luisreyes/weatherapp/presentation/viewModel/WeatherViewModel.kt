@@ -7,7 +7,9 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
 import android.net.ConnectivityManager
+import android.os.Looper
 import android.util.Log
+import androidx.compose.runtime.mutableStateListOf
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LiveData
@@ -15,6 +17,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.maps.model.LatLng
 import com.luisreyes.weatherapp.data.local.dao.CityWeatherDao
 import com.luisreyes.weatherapp.data.mappers.toDomainModel
 import com.luisreyes.weatherapp.domain.model.WeatherModel
@@ -47,8 +53,8 @@ class WeatherViewModel @Inject constructor(
     private val _weatherLiveData = MutableLiveData<WeatherModel?>()
     val weatherLiveData: LiveData<WeatherModel?> get() = _weatherLiveData
 
-    private val _cityWeatherLiveData = MutableLiveData<String?>()
-    val cityWeatherLiveData: LiveData<String?> get() = _cityWeatherLiveData
+    private val _searchHistory = mutableStateListOf<LatLng>()
+    val searchHistory: List<LatLng> get() = _searchHistory
 
     private val _locationData = MutableLiveData<Pair<Double?, Double?>>()
     val locationData: LiveData<Pair<Double?, Double?>> get() = _locationData
@@ -74,25 +80,49 @@ class WeatherViewModel @Inject constructor(
 
     @SuppressLint("MissingPermission")
     fun getDeviceLocation() {
-        Log.d("getDeviceLocation: ", "incio de metodo")
+        Log.d("getDeviceLocation: ", "Inicio del método")
         if (locationPermissionGranted) {
             val locationResult = fusedLocationProviderClient.lastLocation
-            Log.d("getDeviceLocation: " , "1" +  locationResult.toString())
+            Log.d("getDeviceLocation: ", "Intentando obtener la última ubicación conocida")
             locationResult.addOnCompleteListener { task ->
-                Log.d("getDeviceLocation: " , "2" + task.toString())
-                if (task.isSuccessful) {
+                if (task.isSuccessful && task.result != null) {
                     lastKnownLocation = task.result
-                    if (lastKnownLocation != null) {
-                        Log.d("getDeviceLocation: " , "3" + lastKnownLocation.toString())
-                        _locationData.value = Pair(lastKnownLocation!!.latitude, lastKnownLocation!!.longitude)
-                        searchCityWeather(lastKnownLocation!!.latitude, lastKnownLocation!!.longitude, "23dbe50d4c50ece6a42833fcc5a6e83b")
-                    }else{
-                        Log.d("getDeviceLocation: " , "4" + lastKnownLocation.toString())
-                    }
+                    Log.d("getDeviceLocation: ", "Ubicación obtenida: $lastKnownLocation")
+                    _locationData.value = Pair(lastKnownLocation!!.latitude, lastKnownLocation!!.longitude)
+                    searchCityWeather(lastKnownLocation!!.latitude, lastKnownLocation!!.longitude, "23dbe50d4c50ece6a42833fcc5a6e83b")
+                } else {
+                    Log.d("getDeviceLocation: ", "La última ubicación es nula, solicitando una nueva ubicación")
+                    requestNewLocationData()
                 }
             }
         }
     }
+
+    @SuppressLint("MissingPermission")
+    private fun requestNewLocationData() {
+        val locationRequest = LocationRequest.create().apply {
+            interval = 10000 // 10 segundos
+            fastestInterval = 5000 // 5 segundos
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        }
+
+        fusedLocationProviderClient.requestLocationUpdates(
+            locationRequest,
+            object : LocationCallback() {
+                override fun onLocationResult(locationResult: LocationResult) {
+                    val location = locationResult.lastLocation
+                    Log.d("requestNewLocationData: ", "Ubicación obtenida: $location")
+                    if (location != null) {
+                        _locationData.value = Pair(location.latitude, location.longitude)
+                        searchCityWeather(location.latitude, location.longitude, "23dbe50d4c50ece6a42833fcc5a6e83b")
+                    }
+                    fusedLocationProviderClient.removeLocationUpdates(this)
+                }
+            },
+            Looper.getMainLooper()
+        )
+    }
+
 
     fun isInternetAvailable(): Boolean {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -160,6 +190,9 @@ class WeatherViewModel @Inject constructor(
             Log.d("getWeatherByCityLocalData: ", "localWeather: $localWeather")
             if (localWeather != null) {
                 _weatherLiveData.value = localWeather
+                val lat = localWeather.latitude
+                val lng = localWeather.longitude
+                _searchHistory.add(LatLng(lat, lng))
             } else {
                 Log.d("getWeatherByCityLocalData: ", "No local data available")
             }
