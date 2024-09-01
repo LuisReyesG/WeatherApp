@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import com.luisreyes.weatherapp.data.local.dao.CityWeatherDao
 import com.luisreyes.weatherapp.data.local.entities.CityWeatherEntity
 
-@Database(entities = [CityWeatherEntity::class], version = 1)
+@Database(entities = [CityWeatherEntity::class], version = 1, exportSchema = false)
 abstract class CityWeatherDatabase : RoomDatabase() {
     abstract fun cityWeatherDao(): CityWeatherDao
 }

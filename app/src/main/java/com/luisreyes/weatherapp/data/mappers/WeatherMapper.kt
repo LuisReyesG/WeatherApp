@@ -6,7 +6,7 @@ import com.luisreyes.weatherapp.domain.model.WeatherModel
 
 fun WeatherResponse.toDomainModel(): WeatherModel {
     return WeatherModel(
-        cityName = this.name,
+        cityName = this.name.lowercase(),
         temperature = this.main.temp,
         weatherDescription = this.weather.firstOrNull()?.description ?: "No description",
         latitude = this.coord.lat,
@@ -16,18 +16,20 @@ fun WeatherResponse.toDomainModel(): WeatherModel {
 
 fun CityWeatherEntity.toDomainModel(): WeatherModel {
     return WeatherModel(
-        cityName = this.cityName,
+        cityName = this.cityName.lowercase(),
         temperature = this.temperature,
         weatherDescription = this.description,
-        latitude = 0.0, // Assuming you might want to store lat/lon in your DB later
-        longitude = 0.0
+        latitude = this.lat,
+        longitude = this.lng
     )
 }
 
 fun WeatherModel.toEntity(): CityWeatherEntity {
     return CityWeatherEntity(
-        cityName = this.cityName,
+        cityName = this.cityName.lowercase(),
         temperature = this.temperature,
-        description = this.weatherDescription
+        description = this.weatherDescription,
+        lat = this.latitude,
+        lng = this.longitude
     )
 }

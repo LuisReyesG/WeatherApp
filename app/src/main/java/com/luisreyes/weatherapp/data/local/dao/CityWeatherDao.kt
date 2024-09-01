@@ -8,8 +8,8 @@ import com.luisreyes.weatherapp.data.local.entities.CityWeatherEntity
 
 @Dao
 interface CityWeatherDao {
-    @Query("SELECT * FROM city_weather WHERE cityName = :cityName")
-    suspend fun getCityWeather(cityName: String): CityWeatherEntity
+    @Query("SELECT * FROM city_weather WHERE LOWER(cityName) = LOWER(:cityName) ")
+    suspend fun getCityWeather(cityName: String): CityWeatherEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCityWeather(cityWeather: CityWeatherEntity)

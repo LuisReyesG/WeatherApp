@@ -1,6 +1,9 @@
 package com.luisreyes.weatherapp.presentation.ui.compose
 
 import android.app.Activity
+import android.content.Context
+import android.net.ConnectivityManager
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -58,12 +61,18 @@ fun WeatherMapScreen(
     }
     var map by remember { mutableStateOf<GoogleMap?>(null) }
 
+    val context = LocalContext.current
+    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val activityNetwork = connectivityManager.activeNetworkInfo
+    val isConnected = activityNetwork?.isConnectedOrConnecting == true
 
-    viewModel.checkLocationPermission(LocalContext.current)
-    if (!viewModel.locationPermissionGranted) {
-        viewModel.requestLocationPermission(LocalContext.current as Activity)
-    } else {
-        viewModel.getDeviceLocation()
+    if(isConnected){
+        viewModel.checkLocationPermission(context)
+        if (!viewModel.locationPermissionGranted) {
+            viewModel.requestLocationPermission(context as Activity)
+        } else {
+            viewModel.getDeviceLocation()
+        }
     }
 
     locationData?.let { (lat, lng) ->
@@ -105,8 +114,10 @@ fun WeatherMapScreen(
                             snippet = "${weatherModel.weatherDescription}, ${weatherModel.temperature}°C"
                         )
 
-                        LaunchedEffect(location) {
-                            map?.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 12f))
+                        if (!isConnected) {
+                            LaunchedEffect(location) {
+                                map?.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 12f))
+                            }
                         }
                     }
                 }
@@ -118,12 +129,14 @@ fun WeatherMapScreen(
 
 
 @Composable
-fun SearchBox(viewModel: WeatherViewModel) {
+fun SearchBox(
+    viewModel: WeatherViewModel){
     var query by remember { mutableStateOf("") }
 
     OutlinedTextField(
         value = query,
-        onValueChange = { query = it },
+        onValueChange = { query = it
+            Log.d("SearchBox", "Query: $query")},
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp),
@@ -135,9 +148,8 @@ fun SearchBox(viewModel: WeatherViewModel) {
         keyboardActions = KeyboardActions(
             onSearch = {
                 if (query.isNotEmpty()) {
-                    val normalizedQuery = Normalizer.normalize(query, Normalizer.Form.NFD)
-                        .replace("\\p{M}".toRegex(), "")
-                    viewModel.getCoordinates(normalizedQuery, "AIzaSyDHkpmXPeW02-7uxqCKKCPZt1ai0k_v-a4")
+                    Log.d("SearchBox", "Searching for: $query")
+                    viewModel.getCoordinates(query, "AIzaSyDHkpmXPeW02-7uxqCKKCPZt1ai0k_v-a4")
                 }
             }
         ),
