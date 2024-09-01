@@ -52,13 +52,12 @@ fun WeatherMapScreen(
     mapProperties: MapProperties = MapProperties(),
     mapUiSettings: MapUiSettings = MapUiSettings(),
     viewModel: WeatherViewModel,
-
-    ) {
+) {
     val weather by viewModel.weatherLiveData.observeAsState()
     val locationData by viewModel.locationData.observeAsState()
     val defaultLocation = LatLng(0.0, 0.0)
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(defaultLocation , 15f)
+        position = CameraPosition.fromLatLngZoom(defaultLocation, 15f)
     }
     var map by remember { mutableStateOf<GoogleMap?>(null) }
 
@@ -79,14 +78,17 @@ fun WeatherMapScreen(
         }
     }
 
+
     locationData?.let { (lat, lng) ->
         if (lat != null && lng != null) {
-            LaunchedEffect(lat, lng) {
-                val newLocation = LatLng(lat, lng)
+            val newLocation = LatLng(lat, lng)
+            LaunchedEffect(newLocation) {
                 cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(newLocation, 12f))
             }
         }
     }
+
+
 
     Scaffold() { paddingValues ->
         Column(
@@ -110,7 +112,7 @@ fun WeatherMapScreen(
                 ) {
                     weather?.let { weatherModel ->
                         val location = LatLng(weatherModel.latitude, weatherModel.longitude)
-                        val markerState = rememberMarkerState( position = location)
+                        val markerState = rememberMarkerState(position = location)
                         Marker(
                             state = markerState,
                             title = weatherModel.cityName,

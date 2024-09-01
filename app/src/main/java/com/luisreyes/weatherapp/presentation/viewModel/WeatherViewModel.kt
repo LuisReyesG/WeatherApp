@@ -53,8 +53,8 @@ class WeatherViewModel @Inject constructor(
     private val _weatherLiveData = MutableLiveData<WeatherModel?>()
     val weatherLiveData: LiveData<WeatherModel?> get() = _weatherLiveData
 
-    private val _searchHistory = mutableStateListOf<LatLng>()
-    val searchHistory: List<LatLng> get() = _searchHistory
+    private val _searchHistory = MutableLiveData<Pair<Double?, Double?>>()
+    val searchHistory: LiveData<Pair<Double?, Double?>> get() = _searchHistory
 
     private val _locationData = MutableLiveData<Pair<Double?, Double?>>()
     val locationData: LiveData<Pair<Double?, Double?>> get() = _locationData
@@ -179,7 +179,11 @@ class WeatherViewModel @Inject constructor(
                 _weatherLiveData.value = localWeather
                 val lat = localWeather.latitude
                 val lng = localWeather.longitude
-                _searchHistory.add(LatLng(lat, lng))
+
+                withContext(Dispatchers.Main) {
+                    _locationData.value = Pair(lat, lng)
+                }
+
             } else {
                 viewContract?.ErrorGetCityLocalData("No local data available")
             }
