@@ -53,6 +53,9 @@ class WeatherViewModel @Inject constructor(
     private val _weatherLiveData = MutableLiveData<WeatherModel?>()
     val weatherLiveData: LiveData<WeatherModel?> get() = _weatherLiveData
 
+    private val _errorLiveData = MutableLiveData<String>()
+    val errorLiveData: LiveData<String> get() = _errorLiveData
+
     private val _searchHistory = MutableLiveData<Pair<Double?, Double?>>()
     val searchHistory: LiveData<Pair<Double?, Double?>> get() = _searchHistory
 
@@ -165,7 +168,9 @@ class WeatherViewModel @Inject constructor(
             try {
                 val weather = getWeatherUseCase(lat, lon, apikey)
                 _weatherLiveData.value = weather
-            } catch (e: NoInternetException) {
+            } catch (e: Exception) {
+                _weatherLiveData.postValue(null)
+                _errorLiveData.postValue(e.message)
                 viewContract?.ErrorSearchCityWeather(e.message)
             }
         }
