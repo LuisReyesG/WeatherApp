@@ -10,7 +10,6 @@ class GetGeolocalitationUseCase @Inject constructor(
     private val repository: GeoRepository
 ){
     suspend operator fun invoke(latlng: String, key: String): Location? {
-        Log.d("consumosgoogel", "getCoordinates3: " + latlng + " " + key)
         return repository.getCoordinates(latlng, key)
     }
 }

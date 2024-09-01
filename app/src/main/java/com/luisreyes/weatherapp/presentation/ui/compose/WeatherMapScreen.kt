@@ -111,7 +111,6 @@ fun WeatherMapScreen(
                     weather?.let { weatherModel ->
                         val location = LatLng(weatherModel.latitude, weatherModel.longitude)
                         val markerState = rememberMarkerState( position = location)
-                        Log.d("WeatherMapScreen: ", "WeatherModel: $weatherModel" + "\n" + "Location: $location")
                         Marker(
                             state = markerState,
                             title = weatherModel.cityName,
@@ -142,7 +141,6 @@ fun SearchBox(
         value = query,
         onValueChange = {
             query = it
-            Log.d("SearchBox", "Query: $query")
         },
         modifier = Modifier
             .fillMaxWidth()
@@ -155,7 +153,6 @@ fun SearchBox(
         keyboardActions = KeyboardActions(
             onSearch = {
                 if (query.isNotEmpty()) {
-                    Log.d("SearchBox", "Searching for: $query")
                     viewModel.getCoordinates(query, "AIzaSyDHkpmXPeW02-7uxqCKKCPZt1ai0k_v-a4")
                     keyboardController?.hide()
                 }

@@ -14,7 +14,6 @@ class GeoDataSourceImpl(
 ): GeoRepositoryDataSource {
 
     override suspend fun getCoordinates(city: String, apiKey: String): Location? {
-        Log.d("consumosgoogel", "getCoordinates: " + city + " " + apiKey)
         val response = geocodingServices.getGeocoding(city, apiKey)
         return response.results.firstOrNull()?.geometry?.location
     }

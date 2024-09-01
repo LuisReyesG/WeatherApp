@@ -36,7 +36,6 @@ class MainActivity : AppCompatActivity(), WeatherViewContract {
     private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        Log.d(TAG, "onCreate: ")
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -44,7 +43,6 @@ class MainActivity : AppCompatActivity(), WeatherViewContract {
     }
 
     private fun setUpCompose() {
-        Log.d(TAG, "setUpCompose: ")
         binding.composeView.apply {
             setContent {
                 WeatherAppTheme {
@@ -64,6 +62,10 @@ class MainActivity : AppCompatActivity(), WeatherViewContract {
     }
 
     override fun ErrorGetCoordinates(message: String?) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+    }
+
+    override fun ErrorGetCityLocalData(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
 }

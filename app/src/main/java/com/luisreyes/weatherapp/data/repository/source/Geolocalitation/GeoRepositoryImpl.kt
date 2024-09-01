@@ -9,7 +9,6 @@ class GeoRepositoryImpl @Inject constructor(
     private val geoDataSource: GeoRepositoryDataSource
 ): GeoRepository {
     override suspend fun getCoordinates(latlng: String, key: String): Location? {
-        Log.d("consumosgoogel", "getCoordinates2: " + latlng + " " + key)
         return geoDataSource.getCoordinates(latlng, key)
     }
 

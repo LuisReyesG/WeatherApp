@@ -80,18 +80,14 @@ class WeatherViewModel @Inject constructor(
 
     @SuppressLint("MissingPermission")
     fun getDeviceLocation() {
-        Log.d("getDeviceLocation: ", "Inicio del método")
         if (locationPermissionGranted) {
             val locationResult = fusedLocationProviderClient.lastLocation
-            Log.d("getDeviceLocation: ", "Intentando obtener la última ubicación conocida")
             locationResult.addOnCompleteListener { task ->
                 if (task.isSuccessful && task.result != null) {
                     lastKnownLocation = task.result
-                    Log.d("getDeviceLocation: ", "Ubicación obtenida: $lastKnownLocation")
                     _locationData.value = Pair(lastKnownLocation!!.latitude, lastKnownLocation!!.longitude)
                     searchCityWeather(lastKnownLocation!!.latitude, lastKnownLocation!!.longitude, "23dbe50d4c50ece6a42833fcc5a6e83b")
                 } else {
-                    Log.d("getDeviceLocation: ", "La última ubicación es nula, solicitando una nueva ubicación")
                     requestNewLocationData()
                 }
             }
@@ -111,7 +107,6 @@ class WeatherViewModel @Inject constructor(
             object : LocationCallback() {
                 override fun onLocationResult(locationResult: LocationResult) {
                     val location = locationResult.lastLocation
-                    Log.d("requestNewLocationData: ", "Ubicación obtenida: $location")
                     if (location != null) {
                         _locationData.value = Pair(location.latitude, location.longitude)
                         searchCityWeather(location.latitude, location.longitude, "23dbe50d4c50ece6a42833fcc5a6e83b")
@@ -135,11 +130,8 @@ class WeatherViewModel @Inject constructor(
 
     //ApisConsumes
     fun getCoordinates(city: String, apikey: String) {
-        Log.d("getCoordinates", "Fetching coordinates for: $city with API key: $apikey")
-
         // Verificar la conectividad
         if (!isInternetAvailable()) {
-            Log.d("getCoordinates", "No internet connection. Fetching data from local database.")
             getWeatherByCityLocalData(city) // Llama al método para obtener datos locales si no hay conexión
             return
         }
@@ -150,12 +142,9 @@ class WeatherViewModel @Inject constructor(
                 val lat = geocoding?.lat
                 val lng = geocoding?.lng
 
-                Log.d("getCoordinates", "Coordinates found: Lat = $lat, Lng = $lng")
-
                 // Cambiar al hilo principal para actualizar LiveData
                 withContext(Dispatchers.Main) {
                     _locationData.value = Pair(lat, lng)
-                    Log.d("getCoordinates", "LocationData updated: $_locationData")
                 }
 
                 // Realizar la llamada para obtener el clima
@@ -165,7 +154,7 @@ class WeatherViewModel @Inject constructor(
             } catch (e: Exception) {
                 e.printStackTrace()
                 viewContract?.ErrorGetCoordinates(e.message)
-                Log.e("getCoordinates", "Failed to fetch coordinates: ${e.message}")
+
             }
         }
     }
@@ -176,7 +165,6 @@ class WeatherViewModel @Inject constructor(
             try {
                 val weather = getWeatherUseCase(lat, lon, apikey)
                 _weatherLiveData.value = weather
-                Log.d("searchCityWeather: ", weather.toString())
             } catch (e: NoInternetException) {
                 viewContract?.ErrorSearchCityWeather(e.message)
             }
@@ -184,17 +172,16 @@ class WeatherViewModel @Inject constructor(
     }
 
     fun getWeatherByCityLocalData(city: String) {
-        Log.d(" getWeatherByCityLocalData: ", "Fetching local data" + city)
         viewModelScope.launch {
             val localWeather = cityWeatherDao.getCityWeather(city)?.toDomainModel()
-            Log.d("getWeatherByCityLocalData: ", "localWeather: $localWeather")
+
             if (localWeather != null) {
                 _weatherLiveData.value = localWeather
                 val lat = localWeather.latitude
                 val lng = localWeather.longitude
                 _searchHistory.add(LatLng(lat, lng))
             } else {
-                Log.d("getWeatherByCityLocalData: ", "No local data available")
+                viewContract?.ErrorGetCityLocalData("No local data available")
             }
         }
     }
