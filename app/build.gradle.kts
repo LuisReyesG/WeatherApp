@@ -70,7 +70,6 @@ dependencies {
     //GoogleMaps
     implementation("com.google.maps.android:maps-compose:4.3.3")
     implementation("com.google.android.gms:play-services-maps:19.0.0")
-    //implementation("com.google.maps.android:maps-utils-ktx:3.2.0")
 
     //Retrofit and Gson
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
@@ -107,6 +106,9 @@ dependencies {
 
     //Unit test
     testImplementation("junit:junit:4.13.2")
+    testImplementation("io.mockk:mockk:1.12.0")
+    testImplementation("androidx.arch.core:core-testing:2.1.0")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
     androidTestImplementation(platform("androidx.compose:compose-bom:2024.08.00"))
