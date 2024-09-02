@@ -3,13 +3,14 @@ package com.luisreyes.weatherapp.presentation.ui.compose
 import android.app.Activity
 import android.content.Context
 import android.net.ConnectivityManager
-import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -28,6 +29,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -40,9 +43,9 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
+import com.luisreyes.weatherapp.R
 import com.luisreyes.weatherapp.domain.model.WeatherModel
 import com.luisreyes.weatherapp.presentation.viewModel.WeatherViewModel
-import java.text.Normalizer
 
 
 @Composable
@@ -138,6 +141,7 @@ fun SearchBox(
 ) {
     var query by remember { mutableStateOf("") }
     val keyboardController = LocalSoftwareKeyboardController.current
+    val keyGoogle = stringResource(id = R.string.key_google_maps)
 
     OutlinedTextField(
         value = query,
@@ -147,7 +151,7 @@ fun SearchBox(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp),
-        placeholder = { Text(text = "Search city...") },
+        placeholder = { Text(text = stringResource(id = R.string.label_search_key)) },
         leadingIcon = {
             Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon")
         },
@@ -155,7 +159,7 @@ fun SearchBox(
         keyboardActions = KeyboardActions(
             onSearch = {
                 if (query.isNotEmpty()) {
-                    viewModel.getCoordinates(query, "AIzaSyDHkpmXPeW02-7uxqCKKCPZt1ai0k_v-a4")
+                    viewModel.getCoordinates(query, keyGoogle)
                     keyboardController?.hide()
                 }
             }
@@ -180,7 +184,20 @@ fun WeatherInfoTable(weatherModel: WeatherModel?) {
             }
             Row {
                 Text(text = "Weather Description: ")
-                Text(text = weather.weatherDescription)
+                Text(text = weather.weatherDescription, modifier = Modifier.padding(end = 8.dp))
+                when (weather.weatherDescription.lowercase()) {
+                    "clear sky" -> Image(painter = painterResource(id = R.drawable.ic_clear_sky), contentDescription = "Clear Sky", modifier = Modifier.size(24.dp))
+                    "few clouds" -> Image(painter = painterResource(id = R.drawable.ic_few_clouds), contentDescription = "Few Clouds",  modifier = Modifier.size(24.dp))
+                    "scattered clouds" -> Image(painter = painterResource(id = R.drawable.ic_few_clouds), contentDescription = "Scattered Clouds",  modifier = Modifier.size(24.dp))
+                    "broken clouds" -> Image(painter = painterResource(id = R.drawable.ic_few_clouds), contentDescription = "Broken Clouds",  modifier = Modifier.size(24.dp))
+                    "shower rain" -> Image(painter = painterResource(id = R.drawable.ic_rain), contentDescription = "Shower Rain",  modifier = Modifier.size(24.dp))
+                    "rain" -> Image(painter = painterResource(id = R.drawable.ic_rain), contentDescription = "Rain",  modifier = Modifier.size(24.dp))
+                    "thunderstorm" -> Image(painter = painterResource(id = R.drawable.ic_thunder_storm), contentDescription = "Thunderstorm",  modifier = Modifier.size(24.dp))
+                    "snow" -> Image(painter = painterResource(id = R.drawable.ic_snow), contentDescription = "Snow",  modifier = Modifier.size(24.dp))
+                    "mist" -> Image(painter = painterResource(id = R.drawable.ic_mist), contentDescription = "Mist",  modifier = Modifier.size(24.dp))
+                    else -> Image(painter = painterResource(id = R.drawable.ic_few_clouds), contentDescription = "Cloudy",  modifier = Modifier.size(24.dp))
+                }
+
             }
             Row {
                 Text(text = "Latitude: ")

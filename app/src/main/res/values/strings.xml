@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">WeatherApp</string>
     <string name="title_activity_weather_maps">WeatherMapsActivity</string>
+    <string name="label_search_key">Search city</string>
+    <string name="key_google_maps">AIzaSyDHkpmXPeW02-7uxqCKKCPZt1ai0k_v-a4</string>
+    <string name="open_weather_api_key">23dbe50d4c50ece6a42833fcc5a6e83b</string>
+    <string name="error_no_internet">No local data available</string>
 </resources>

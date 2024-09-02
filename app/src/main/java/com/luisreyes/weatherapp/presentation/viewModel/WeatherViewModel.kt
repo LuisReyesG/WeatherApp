@@ -21,6 +21,7 @@ import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.maps.model.LatLng
+import com.luisreyes.weatherapp.R
 import com.luisreyes.weatherapp.data.local.dao.CityWeatherDao
 import com.luisreyes.weatherapp.data.mappers.toDomainModel
 import com.luisreyes.weatherapp.domain.model.WeatherModel
@@ -89,7 +90,7 @@ class WeatherViewModel @Inject constructor(
                 if (task.isSuccessful && task.result != null) {
                     lastKnownLocation = task.result
                     _locationData.value = Pair(lastKnownLocation!!.latitude, lastKnownLocation!!.longitude)
-                    searchCityWeather(lastKnownLocation!!.latitude, lastKnownLocation!!.longitude, "23dbe50d4c50ece6a42833fcc5a6e83b")
+                    searchCityWeather(lastKnownLocation!!.latitude, lastKnownLocation!!.longitude,  context.getString(R.string.open_weather_api_key))
                 } else {
                     requestNewLocationData()
                 }
@@ -112,7 +113,7 @@ class WeatherViewModel @Inject constructor(
                     val location = locationResult.lastLocation
                     if (location != null) {
                         _locationData.value = Pair(location.latitude, location.longitude)
-                        searchCityWeather(location.latitude, location.longitude, "23dbe50d4c50ece6a42833fcc5a6e83b")
+                        searchCityWeather(location.latitude, location.longitude, context.getString(R.string.open_weather_api_key))
                     }
                     fusedLocationProviderClient.removeLocationUpdates(this)
                 }
@@ -152,7 +153,7 @@ class WeatherViewModel @Inject constructor(
 
                 // Realizar la llamada para obtener el clima
                 if (lat != null && lng != null) {
-                    searchCityWeather(lat, lng, "23dbe50d4c50ece6a42833fcc5a6e83b")
+                    searchCityWeather(lat, lng, context.getString(R.string.open_weather_api_key))
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -190,7 +191,7 @@ class WeatherViewModel @Inject constructor(
                 }
 
             } else {
-                viewContract?.ErrorGetCityLocalData("No local data available")
+                viewContract?.ErrorGetCityLocalData(context.getString(R.string.error_no_internet))
             }
         }
     }
